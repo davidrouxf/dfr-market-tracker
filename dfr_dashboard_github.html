@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFR Market Tracker — Florida Real Estate</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  /* Brand palette from DFR */
+  --teal-dark:   #5992A1;
+  --teal-mid:    #5099A1;
+  --teal-light:  #7CB4A3;
+  --teal-muted:  #8BB892;
+  --slate:       #30384E;
+  --slate-mid:   #3D6E83;
+  --slate-light: #708FA3;
+  --coral:       #EF8641;
+  --coral-dark:  #EF5B41;
+  --sand:        #DB6C41;
+  --gray-warm:   #C7C5C5;
+  --gray-light:  #E8E8E0;
+  --gray-mid:    #999FA5;
+  --bg:          #F4F2EE;
+  --bg-card:     #FFFFFF;
+  --text:        #2A2E35;
+  --text-muted:  #6B7280;
+  --border:      #DDD9D0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--slate);
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  border-bottom: 3px solid var(--teal-dark);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--teal-light);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.data-badge {
+  font-size: 11px;
+  color: var(--gray-warm);
+  letter-spacing: 1px;
+}
+
+.data-badge span {
+  color: var(--teal-light);
+  font-weight: 500;
+}
+
+/* ── NAV TABS ── */
+.nav-tabs {
+  background: var(--slate);
+  padding: 0 40px;
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.nav-tab {
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.nav-tab:hover { color: #fff; }
+.nav-tab.active {
+  color: var(--teal-light);
+  border-bottom-color: var(--teal-dark);
+}
+
+/* ── MAIN ── */
+main {
+  padding: 32px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── KPI STRIP ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.kpi-card:nth-child(1)::after { background: var(--teal-dark); }
+.kpi-card:nth-child(2)::after { background: var(--coral); }
+.kpi-card:nth-child(3)::after { background: var(--slate-mid); }
+.kpi-card:nth-child(4)::after { background: var(--teal-light); }
+
+.kpi-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--slate);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.kpi-delta {
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.kpi-delta.up   { color: var(--teal-mid); }
+.kpi-delta.down { color: var(--coral-dark); }
+
+/* ── CHART GRID ── */
+.chart-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.chart-grid.two-col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.chart-grid.full {
+  grid-template-columns: 1fr;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: 2px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.chart-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--slate);
+  margin-bottom: 3px;
+}
+
+.chart-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.chart-tag {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 2px;
+}
+
+/* ── SECTION HEADER ── */
+.section-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-top: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  background: var(--teal-dark);
+}
+
+/* ── RANGE SELECTOR ── */
+.range-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+.range-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 6px;
+}
+
+.range-btn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.range-btn:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
+.range-btn.active {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: #fff;
+}
+
+/* ── FOOTER ── */
+footer {
+  margin-top: 40px;
+  padding: 20px 40px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── LOADING ── */
+#loading {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 999;
+}
+
+.loading-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  color: var(--slate);
+}
+
+.loading-bar {
+  width: 120px;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-fill {
+  height: 100%;
+  background: var(--teal-dark);
+  animation: load 1.2s ease-in-out infinite;
+}
+
+@keyframes load {
+  0%   { width: 0%; margin-left: 0%; }
+  50%  { width: 60%; margin-left: 20%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+
+/* ── PAGE SECTIONS ── */
+.page { display: none; }
+.page.active { display: block; }
+
+@media (max-width: 900px) {
+  main { padding: 20px; }
+  header, .nav-tabs, footer { padding-left: 20px; padding-right: 20px; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid.two-col { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loading-logo">DFR</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div style="font-size:12px;color:var(--text-muted);letter-spacing:2px">CARGANDO DATOS</div>
+</div>
+
+<header>
+  <div class="brand">
+    <span class="brand-name">DFR Market Tracker</span>
+    <span class="brand-sub">Florida Real Estate</span>
+  </div>
+  <div class="header-meta">
+    <div class="data-badge">FUENTE: <span>FRED — Federal Reserve Bank of St. Louis</span></div>
+    <div class="data-badge">ÚLTIMA ACTUALIZACIÓN: <span id="last-date">—</span></div>
+  </div>
+</header>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage('precios')">Precios</button>
+  <button class="nav-tab" onclick="showPage('inventario')">Inventario</button>
+  <button class="nav-tab" onclick="showPage('velocidad')">Velocidad</button>
+</div>
+
+<main>
+
+  <!-- KPIs -->
+  <div class="kpi-strip" id="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-label">Case-Shiller Miami</div>
+      <div class="kpi-value" id="kpi-miami">—</div>
+      <div class="kpi-sub">Índice (Ene 2000 = 100)</div>
+      <div class="kpi-delta" id="kpi-miami-d"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Case-Shiller Nacional</div>
+      <div class="kpi-value" id="kpi-us">—</div>
+      <div class="kpi-sub">Índice (Ene 2000 = 100)</div>
+      <div class="kpi-delta" id="kpi-us-d"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Listados Activos FL</div>
+      <div class="kpi-value" id="kpi-list">—</div>
+      <div class="kpi-sub">Propiedades en mercado</div>
+      <div class="kpi-delta" id="kpi-list-d"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Días en Mercado FL</div>
+      <div class="kpi-value" id="kpi-days">—</div>
+      <div class="kpi-sub">Mediana días hasta venta</div>
+      <div class="kpi-delta" id="kpi-days-d"></div>
+    </div>
+  </div>
+
+  <!-- RANGO -->
+  <div class="range-bar">
+    <span class="range-label">Período</span>
+    <button class="range-btn" onclick="setRange(1)">1A</button>
+    <button class="range-btn" onclick="setRange(2)">2A</button>
+    <button class="range-btn active" onclick="setRange(5)">5A</button>
+    <button class="range-btn" onclick="setRange(0)">Máx</button>
+  </div>
+
+  <!-- PAGE: PRECIOS -->
+  <div id="page-precios" class="page active">
+    <div class="section-title">Índices de precios de vivienda</div>
+    <div class="chart-grid full" style="margin-bottom:20px">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Miami vs. EE.UU. Nacional</div>
+            <div class="chart-subtitle">S&P Case-Shiller · Índice Ene 2000 = 100 · No ajustado estacionalmente</div>
+          </div>
+          <span class="chart-tag">Mensual</span>
+        </div>
+        <canvas id="chart-precios-main" height="100"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Miami vs Nacional — Base 100 (Ene 2017)</div>
+            <div class="chart-subtitle">Ambas series reindexadas · Muestra quién ha crecido más</div>
+          </div>
+          <span class="chart-tag">Reindexado</span>
+        </div>
+        <canvas id="chart-ratio" height="140"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Z-Score Miami</div>
+            <div class="chart-subtitle">Desviaciones estándar vs promedio histórico · &gt;2 = caro, &lt;-2 = barato</div>
+          </div>
+          <span class="chart-tag">Z-Score</span>
+        </div>
+        <canvas id="chart-yoy" height="140"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: INVENTARIO -->
+  <div id="page-inventario" class="page">
+    <div class="section-title">Inventario de propiedades activas</div>
+    <div class="chart-grid full" style="margin-bottom:20px">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Listados Activos — Florida vs. Miami-Dade</div>
+            <div class="chart-subtitle">Conteo de propiedades activas en listing · Fuente: FRED</div>
+          </div>
+          <span class="chart-tag">Mensual</span>
+        </div>
+        <canvas id="chart-inv-main" height="100"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Florida — Tendencia</div>
+            <div class="chart-subtitle">Listados activos totales</div>
+          </div>
+        </div>
+        <canvas id="chart-inv-fl" height="140"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Miami-Dade — Tendencia</div>
+            <div class="chart-subtitle">Listados activos condado</div>
+          </div>
+        </div>
+        <canvas id="chart-inv-mia" height="140"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: VELOCIDAD -->
+  <div id="page-velocidad" class="page">
+    <div class="section-title">Velocidad del mercado — días en mercado</div>
+    <div class="chart-grid full" style="margin-bottom:20px">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Días en Mercado — Florida vs. Miami-Dade</div>
+            <div class="chart-subtitle">Mediana de días desde listing hasta contrato · Fuente: FRED</div>
+          </div>
+          <span class="chart-tag">Mensual</span>
+        </div>
+        <canvas id="chart-days-main" height="100"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Florida</div>
+            <div class="chart-subtitle">Días mediana en mercado</div>
+          </div>
+        </div>
+        <canvas id="chart-days-fl" height="140"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Miami-Dade</div>
+            <div class="chart-subtitle">Días mediana en mercado</div>
+          </div>
+        </div>
+        <canvas id="chart-days-mia" height="140"></canvas>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>DFR Market Tracker © 2026 · Datos: FRED — Federal Reserve Bank of St. Louis</span>
+  <span id="footer-range">Mostrando: últimos 5 años</span>
+</footer>
+
+<script>
+// ── PALETA ──
+const C = {
+  teal:       '#5992A1',
+  tealMid:    '#5099A1',
+  tealLight:  '#7CB4A3',
+  coral:      '#EF8641',
+  coralDark:  '#EF5B41',
+  slate:      '#30384E',
+  slateMid:   '#3D6E83',
+  slateLight: '#708FA3',
+  sand:       '#DB6C41',
+  gray:       '#C7C5C5',
+};
+
+// ── GLOBALS ──
+let allData = [];
+let charts = {};
+let currentRange = 5;
+let currentPage = 'precios';
+
+// ── CSV ──
+const CSV_URL = 'FB_Dashboard.csv';
+
+function parseDate(str) {
+  const [m, d, y] = str.split('/');
+  return new Date(+y, +m - 1, +d);
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' });
+}
+
+function filterByRange(data, years) {
+  if (!years) return data;
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - years);
+  return data.filter(r => r.date >= cutoff);
+}
+
+// ── CHART DEFAULTS ──
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#6B7280';
+
+function baseOpts(yLabel = '') {
+  return {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: { boxWidth: 10, boxHeight: 10, padding: 16, usePointStyle: true, pointStyle: 'circle' }
+      },
+      tooltip: {
+        backgroundColor: '#30384E',
+        titleColor: '#C7C5C5',
+        bodyColor: '#fff',
+        padding: 10,
+        cornerRadius: 2,
+        titleFont: { size: 10, weight: '500' },
+        bodyFont: { size: 12 },
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: '#EEE9E0' },
+        ticks: { maxTicksLimit: 8, maxRotation: 0 },
+        border: { color: '#DDD9D0' }
+      },
+      y: {
+        grid: { color: '#EEE9E0' },
+        ticks: { maxTicksLimit: 6 },
+        border: { color: '#DDD9D0' },
+        title: yLabel ? { display: true, text: yLabel, font: { size: 10 }, color: '#9CA3AF' } : { display: false }
+      }
+    }
+  };
+}
+
+function makeDataset(label, data, color, opts = {}) {
+  return {
+    label,
+    data,
+    borderColor: color,
+    backgroundColor: color + '18',
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    fill: opts.fill ?? false,
+    tension: 0.3,
+    ...opts,
+  };
+}
+
+// ── BUILD CHARTS ──
+function buildAll(data) {
+  const labels = data.map(r => fmtDate(r.date));
+
+  destroyAll();
+
+  // ── PRECIOS MAIN ──
+  charts.preciosMain = new Chart(document.getElementById('chart-precios-main'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        makeDataset('Case-Shiller Miami', data.map(r => r.MIXRNSA),    C.teal,     { fill: true }),
+        makeDataset('Case-Shiller Nacional', data.map(r => r.CSUSHPINSA), C.coral, { fill: false }),
+      ]
+    },
+    options: baseOpts('Índice (Ene 2000=100)')
+  });
+
+  // ── REINDEXADO BASE 100 ──
+  const base0 = allData[0]; // siempre usar el primer dato de toda la historia como base
+  const baseMIA = allData.find(r => r.MIXRNSA)?.MIXRNSA;
+  const baseUS  = allData.find(r => r.CSUSHPINSA)?.CSUSHPINSA;
+  const idxMIA = data.map(r => r.MIXRNSA    && baseMIA ? +((r.MIXRNSA    / baseMIA) * 100).toFixed(2) : null);
+  const idxUS  = data.map(r => r.CSUSHPINSA && baseUS  ? +((r.CSUSHPINSA / baseUS)  * 100).toFixed(2) : null);
+
+  charts.ratio = new Chart(document.getElementById('chart-ratio'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        makeDataset('Miami (base 100)',   idxMIA, C.teal,  { fill: true }),
+        makeDataset('Nacional (base 100)', idxUS, C.coral, { fill: false }),
+      ]
+    },
+    options: baseOpts('Índice (Ene 2017 = 100)')
+  });
+
+  // ── Z-SCORE MIAMI (usando toda la historia disponible) ──
+  const miaVals = allData.map(r => r.MIXRNSA).filter(v => v);
+  const mean = miaVals.reduce((a,b) => a+b, 0) / miaVals.length;
+  const std  = Math.sqrt(miaVals.reduce((a,b) => a + (b-mean)**2, 0) / miaVals.length);
+  const zscore = data.map(r => r.MIXRNSA ? +((r.MIXRNSA - mean) / std).toFixed(2) : null);
+
+  charts.yoy = new Chart(document.getElementById('chart-yoy'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        makeDataset('Z-Score Miami', zscore, C.slateMid, { fill: false }),
+        {
+          label: '+2σ', data: data.map(() => 2),
+          borderColor: C.coralDark, borderWidth: 1, borderDash: [4,4],
+          pointRadius: 0, fill: false, tension: 0,
+        },
+        {
+          label: '-2σ', data: data.map(() => -2),
+          borderColor: C.tealLight, borderWidth: 1, borderDash: [4,4],
+          pointRadius: 0, fill: false, tension: 0,
+        },
+      ]
+    },
+    options: {
+      ...baseOpts('Desviaciones estándar'),
+      plugins: {
+        ...baseOpts().plugins,
+        annotation: {},
+        tooltip: { ...baseOpts().plugins.tooltip }
+      }
+    }
+  });
+
+  // ── INVENTARIO MAIN ──
+  charts.invMain = new Chart(document.getElementById('chart-inv-main'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        makeDataset('Florida', data.map(r => r.ACTLISCOUFL),    C.teal,  { fill: true }),
+        makeDataset('Miami-Dade', data.map(r => r.ACTLISCOU12086), C.coral, { fill: false }),
+      ]
+    },
+    options: {
+      ...baseOpts('Listados activos'),
+      scales: {
+        ...baseOpts().scales,
+        y:  { ...baseOpts().scales.y, type: 'linear', position: 'left' },
+        y1: { ...baseOpts().scales.y, type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+
+  // ── INV FL ──
+  charts.invFL = new Chart(document.getElementById('chart-inv-fl'), {
+    type: 'line',
+    data: { labels, datasets: [ makeDataset('Florida', data.map(r => r.ACTLISCOUFL), C.teal, { fill: true }) ] },
+    options: baseOpts()
+  });
+
+  // ── INV MIA ──
+  charts.invMia = new Chart(document.getElementById('chart-inv-mia'), {
+    type: 'line',
+    data: { labels, datasets: [ makeDataset('Miami-Dade', data.map(r => r.ACTLISCOU12086), C.coral, { fill: true }) ] },
+    options: baseOpts()
+  });
+
+  // ── DAYS MAIN ──
+  charts.daysMain = new Chart(document.getElementById('chart-days-main'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        makeDataset('Florida',    data.map(r => r.MEDDAYONMARFL),    C.teal,     { fill: true }),
+        makeDataset('Miami-Dade', data.map(r => r.MEDDAYONMAR12086), C.slateLight, { fill: false }),
+      ]
+    },
+    options: baseOpts('Días')
+  });
+
+  // ── DAYS FL ──
+  charts.daysFL = new Chart(document.getElementById('chart-days-fl'), {
+    type: 'line',
+    data: { labels, datasets: [ makeDataset('Florida', data.map(r => r.MEDDAYONMARFL), C.teal, { fill: true }) ] },
+    options: baseOpts('Días')
+  });
+
+  // ── DAYS MIA ──
+  charts.daysMia = new Chart(document.getElementById('chart-days-mia'), {
+    type: 'line',
+    data: { labels, datasets: [ makeDataset('Miami-Dade', data.map(r => r.MEDDAYONMAR12086), C.slateLight, { fill: true }) ] },
+    options: baseOpts('Días')
+  });
+}
+
+function destroyAll() {
+  Object.values(charts).forEach(c => c && c.destroy());
+  charts = {};
+}
+
+// ── KPIs ──
+function updateKPIs(data) {
+  const last  = [...data].reverse().find(r => r.MIXRNSA);
+  const prev  = [...data].reverse().find((r, i) => i > 0 && r.MIXRNSA);
+  const lastL = [...data].reverse().find(r => r.ACTLISCOUFL);
+  const prevL = [...data].reverse().find((r, i) => i > 0 && r.ACTLISCOUFL);
+  const lastD = [...data].reverse().find(r => r.MEDDAYONMARFL);
+
+  if (last) {
+    document.getElementById('last-date').textContent = fmtDate(last.date);
+    document.getElementById('kpi-miami').textContent = last.MIXRNSA ? last.MIXRNSA.toFixed(1) : '—';
+    document.getElementById('kpi-us').textContent    = last.CSUSHPINSA ? last.CSUSHPINSA.toFixed(1) : '—';
+    if (prev && last.MIXRNSA && prev.MIXRNSA) {
+      const d = ((last.MIXRNSA / prev.MIXRNSA - 1) * 100).toFixed(2);
+      const el = document.getElementById('kpi-miami-d');
+      el.textContent = (d >= 0 ? '▲ +' : '▼ ') + d + '% vs mes anterior';
+      el.className = 'kpi-delta ' + (d >= 0 ? 'up' : 'down');
+    }
+    if (prev && last.CSUSHPINSA && prev.CSUSHPINSA) {
+      const d = ((last.CSUSHPINSA / prev.CSUSHPINSA - 1) * 100).toFixed(2);
+      const el = document.getElementById('kpi-us-d');
+      el.textContent = (d >= 0 ? '▲ +' : '▼ ') + d + '% vs mes anterior';
+      el.className = 'kpi-delta ' + (d >= 0 ? 'up' : 'down');
+    }
+  }
+
+  if (lastL) {
+    document.getElementById('kpi-list').textContent = lastL.ACTLISCOUFL ? lastL.ACTLISCOUFL.toLocaleString('es-MX') : '—';
+    if (prevL && lastL.ACTLISCOUFL && prevL.ACTLISCOUFL) {
+      const d = ((lastL.ACTLISCOUFL / prevL.ACTLISCOUFL - 1) * 100).toFixed(1);
+      const el = document.getElementById('kpi-list-d');
+      el.textContent = (d >= 0 ? '▲ +' : '▼ ') + d + '% vs mes anterior';
+      el.className = 'kpi-delta ' + (d >= 0 ? 'up' : 'down');
+    }
+  }
+
+  if (lastD) {
+    document.getElementById('kpi-days').textContent = lastD.MEDDAYONMARFL ?? '—';
+  }
+}
+
+// ── RANGE ──
+function setRange(years) {
+  currentRange = years;
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const labels = { 0: 'histórico completo', 1: 'último año', 2: 'últimos 2 años', 5: 'últimos 5 años' };
+  document.getElementById('footer-range').textContent = 'Mostrando: ' + (labels[years] || years + ' años');
+  const filtered = filterByRange(allData, years);
+  buildAll(filtered);
+}
+
+// ── PAGE NAV ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  currentPage = name;
+}
+
+// ── LOAD CSV ──
+Papa.parse(CSV_URL, {
+  download: true, {
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    allData = results.data
+      .map(r => ({
+        date:             parseDate(r.DATE),
+        MIXRNSA:          parseFloat(r.MIXRNSA) || null,
+        CSUSHPINSA:       parseFloat(r.CSUSHPINSA) || null,
+        ACTLISCOUFL:      parseFloat(r.ACTLISCOUFL) || null,
+        ACTLISCOU12086:   parseFloat(r.ACTLISCOU12086) || null,
+        MEDDAYONMARFL:    parseFloat(r.MEDDAYONMARFL) || null,
+        MEDDAYONMAR12086: parseFloat(r.MEDDAYONMAR12086) || null,
+      }))
+      .filter(r => r.date instanceof Date && !isNaN(r.date))
+      .sort((a, b) => a.date - b.date);
+
+    const filtered = filterByRange(allData, currentRange);
+    updateKPIs(allData);
+    buildAll(filtered);
+    document.getElementById('loading').style.display = 'none';
+  },
+  error: function() {
+    document.getElementById('loading').innerHTML = '<div style="color:#EF5B41;font-family:serif;font-size:18px">Error cargando datos.</div>';
+  }
+});
+</script>
+</body>
+</html>
