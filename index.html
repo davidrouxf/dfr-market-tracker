@@ -3,871 +3,1299 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FB Market Tracker — Florida Real Estate</title>
+<title>Finanz Butik Market Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+  /* ══════════════════════════════════════════
+     PALETTE from brand image
+     Teal primary:  #3d8a8c / #6bbfc1 / #2c6668
+     Slate dark:    #3d4f5c / #596a7a
+     Coral accent:  #c85a4a / #d4736a
+     Warm amber:    #b8894a
+     Sage green:    #5a7a6a
+     Background:    #edeae4 / #f7f5f1
+  ══════════════════════════════════════════ */
+  :root {
+    --bg:         #edeae4;
+    --bg2:        #e4e0d8;
+    --surface:    #f7f5f1;
+    --surface2:   #ede9e1;
+    --border:     #d0c9be;
+    --teal:       #3d8a8c;
+    --teal-lt:    #6bbfc1;
+    --teal-dk:    #2c6668;
+    --slate:      #3d4f5c;
+    --slate-lt:   #596a7a;
+    --coral:      #c85a4a;
+    --coral-lt:   #d4736a;
+    --amber:      #b8894a;
+    --sage:       #5a7a6a;
+    --text:       #2a2e35;
+    --text-mid:   #4a5260;
+    --text-muted: #7a8494;
+    --text-dim:   #a8b0bc;
+    --positive:   #3d8a8c;
+    --negative:   #c85a4a;
+  }
 
-:root {
-  /* Brand palette from DFR */
-  --teal-dark:   #5992A1;
-  --teal-mid:    #5099A1;
-  --teal-light:  #7CB4A3;
-  --teal-muted:  #8BB892;
-  --slate:       #30384E;
-  --slate-mid:   #3D6E83;
-  --slate-light: #708FA3;
-  --coral:       #EF8641;
-  --coral-dark:  #EF5B41;
-  --sand:        #DB6C41;
-  --gray-warm:   #C7C5C5;
-  --gray-light:  #E8E8E0;
-  --gray-mid:    #999FA5;
-  --bg:          #F4F2EE;
-  --bg-card:     #FFFFFF;
-  --text:        #2A2E35;
-  --text-muted:  #6B7280;
-  --border:      #DDD9D0;
-}
+  * { margin:0; padding:0; box-sizing:border-box; }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  min-height: 100vh;
-}
+  /* ── HEADER ── */
+  header {
+    background: var(--slate);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    border-bottom: 3px solid var(--teal);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
 
-/* ── HEADER ── */
-header {
-  background: var(--slate);
-  padding: 0 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  border-bottom: 3px solid var(--teal-dark);
-}
+  .brand { display:flex; align-items:baseline; gap:12px; }
 
-.brand {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 21px;
+    font-weight: 600;
+    color: #f0ebe3;
+    letter-spacing: 0.01em;
+  }
 
-.brand-name {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.5px;
-}
+  .brand-name em { font-style:italic; color:var(--teal-lt); }
 
-.brand-sub {
-  font-size: 11px;
-  color: var(--teal-light);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  font-weight: 300;
-}
+  .brand-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--teal-lt);
+    opacity: 0.75;
+  }
 
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
+  .update-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: rgba(240,235,227,0.55);
+    letter-spacing: 0.05em;
+  }
 
-.data-badge {
-  font-size: 11px;
-  color: var(--gray-warm);
-  letter-spacing: 1px;
-}
+  .status-dot {
+    width:5px; height:5px;
+    border-radius:50%;
+    background:var(--teal-lt);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
 
-.data-badge span {
-  color: var(--teal-light);
-  font-weight: 500;
-}
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-/* ── NAV TABS ── */
-.nav-tabs {
-  background: var(--slate);
-  padding: 0 40px;
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
+  /* ── TAB BAR ── */
+  .tab-bar {
+    background: var(--slate-lt);
+    display: flex;
+    padding: 0 40px;
+    position: sticky;
+    top: 68px;
+    z-index: 99;
+  }
 
-.nav-tab {
-  padding: 10px 20px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gray-mid);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-}
+  .tab-btn {
+    height: 50px;
+    padding: 0 26px;
+    border: none;
+    background: transparent;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(240,235,227,0.45);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
 
-.nav-tab:hover { color: #fff; }
-.nav-tab.active {
-  color: var(--teal-light);
-  border-bottom-color: var(--teal-dark);
-}
+  .tab-btn::after {
+    content:'';
+    position:absolute;
+    bottom:0; left:0; right:0;
+    height:3px;
+    background:var(--teal-lt);
+    transform:scaleX(0);
+    transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
 
-/* ── MAIN ── */
-main {
-  padding: 32px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+  .tab-btn.active { color:#f0ebe3; }
+  .tab-btn.active::after { transform:scaleX(1); }
+  .tab-btn:hover { color:rgba(240,235,227,0.8); }
 
-/* ── KPI STRIP ── */
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
-}
+  .tab-num { font-size:8px; opacity:0.5; margin-right:5px; }
 
-.kpi-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  padding: 20px 24px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 2px;
-}
+  /* ── PANELS ── */
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
 
-.kpi-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 3px;
-}
+  .wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 36px 40px 80px;
+  }
 
-.kpi-card:nth-child(1)::after { background: var(--teal-dark); }
-.kpi-card:nth-child(2)::after { background: var(--coral); }
-.kpi-card:nth-child(3)::after { background: var(--slate-mid); }
-.kpi-card:nth-child(4)::after { background: var(--teal-light); }
+  /* ── PANEL HERO ── */
+  .panel-hero {
+    padding: 24px 0 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
 
-.kpi-label {
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  font-weight: 500;
-}
+  .panel-hero h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.1;
+  }
 
-.kpi-value {
-  font-family: 'Playfair Display', serif;
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--slate);
-  line-height: 1;
-  margin-bottom: 6px;
-}
+  .panel-hero h2 em { font-style:italic; color:var(--teal); }
 
-.kpi-sub {
-  font-size: 11px;
-  color: var(--text-muted);
-}
+  .panel-hero p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 5px;
+    letter-spacing: 0.05em;
+  }
 
-.kpi-delta {
-  font-size: 11px;
-  font-weight: 500;
-  margin-top: 4px;
-}
-.kpi-delta.up   { color: var(--teal-mid); }
-.kpi-delta.down { color: var(--coral-dark); }
+  /* ── SECTION LABEL ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
 
-/* ── CHART GRID ── */
-.chart-grid {
-  display: grid;
-  gap: 20px;
-}
+  .sl-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--teal);
+    letter-spacing: 0.05em;
+  }
 
-.chart-grid.two-col {
-  grid-template-columns: 1fr 1fr;
-}
+  .sl-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
 
-.chart-grid.full {
-  grid-template-columns: 1fr;
-}
+  .sl-line { flex:1; height:1px; background:var(--border); }
 
-.chart-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  padding: 24px;
-  border-radius: 2px;
-}
+  .section { margin-bottom: 44px; }
 
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+  }
 
-.chart-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--slate);
-  margin-bottom: 3px;
-}
+  .card-accent {
+    position:absolute;
+    top:0; left:0; right:0;
+    height:3px;
+    background: var(--teal);
+    opacity:0.35;
+    transition:opacity 0.3s;
+  }
 
-.chart-subtitle {
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-}
+  .card:hover .card-accent { opacity:1; }
 
-.chart-tag {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  border-radius: 2px;
-}
+  .card-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
 
-/* ── SECTION HEADER ── */
-.section-title {
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  margin-top: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+  .card-subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+  }
 
-.section-title::before {
-  content: '';
-  display: inline-block;
-  width: 16px;
-  height: 2px;
-  background: var(--teal-dark);
-}
+  /* ── GRIDS ── */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  .col-2  { grid-column:span 2; }
 
-/* ── RANGE SELECTOR ── */
-.range-bar {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 24px;
-  align-items: center;
-}
+  @media(max-width:1100px){ .grid-4{grid-template-columns:repeat(2,1fr)} }
+  @media(max-width:760px){
+    .grid-2,.grid-4{grid-template-columns:1fr}
+    .col-2{grid-column:span 1}
+    header,.tab-bar{padding-left:20px;padding-right:20px}
+    .wrapper{padding:24px 20px 60px}
+  }
 
-.range-label {
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-right: 6px;
-}
+  /* ── KPI ── */
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: var(--text);
+    margin: 10px 0 4px;
+  }
 
-.range-btn {
-  padding: 5px 12px;
-  font-size: 11px;
-  font-family: 'DM Sans', sans-serif;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.15s;
-  font-weight: 500;
-}
+  .kpi-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
 
-.range-btn:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
-.range-btn.active {
-  background: var(--teal-dark);
-  border-color: var(--teal-dark);
-  color: #fff;
-}
+  .badge {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:3px 9px;
+    border-radius:2px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    margin-top:10px;
+  }
 
-/* ── FOOTER ── */
-footer {
-  margin-top: 40px;
-  padding: 20px 40px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: var(--text-muted);
-}
+  .badge.pos { background:rgba(61,138,140,0.1); color:var(--positive); border:1px solid rgba(61,138,140,0.28); }
+  .badge.neg { background:rgba(200,90,74,0.1);  color:var(--negative); border:1px solid rgba(200,90,74,0.28); }
+  .badge.neu { background:rgba(61,79,92,0.08);  color:var(--slate);    border:1px solid rgba(61,79,92,0.22); }
 
-/* ── LOADING ── */
-#loading {
-  position: fixed; inset: 0;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 999;
-}
+  /* ── CHART CONTROLS ── */
+  .chart-controls { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
 
-.loading-logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  color: var(--slate);
-}
+  .ctrl-btn {
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    padding:4px 11px;
+    border-radius:2px;
+    cursor:pointer;
+    transition:all 0.18s;
+  }
 
-.loading-bar {
-  width: 120px;
-  height: 2px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
+  .ctrl-btn:hover { border-color:var(--teal); color:var(--teal); }
+  .ctrl-btn.active { background:var(--teal); border-color:var(--teal); color:#fff; }
 
-.loading-fill {
-  height: 100%;
-  background: var(--teal-dark);
-  animation: load 1.2s ease-in-out infinite;
-}
+  .chart-wrap { position:relative; width:100%; }
 
-@keyframes load {
-  0%   { width: 0%; margin-left: 0%; }
-  50%  { width: 60%; margin-left: 20%; }
-  100% { width: 0%; margin-left: 100%; }
-}
+  /* ── DATA TABLES ── */
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; }
 
-/* ── PAGE SECTIONS ── */
-.page { display: none; }
-.page.active { display: block; }
+  .data-table thead th {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    text-align:left;
+    padding:0 10px 10px 0;
+    border-bottom:1px solid var(--border);
+  }
 
-@media (max-width: 900px) {
-  main { padding: 20px; }
-  header, .nav-tabs, footer { padding-left: 20px; padding-right: 20px; }
-  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
-  .chart-grid.two-col { grid-template-columns: 1fr; }
-}
+  .data-table thead th:not(:first-child) { text-align:right; }
+
+  .data-table tbody tr {
+    border-bottom:1px solid var(--border);
+    transition:background 0.12s;
+  }
+
+  .data-table tbody tr:hover { background:var(--surface2); }
+  .data-table tbody tr:last-child { border-bottom:none; }
+
+  .data-table td {
+    padding:9px 10px 9px 0;
+    color:var(--text);
+  }
+
+  .data-table td:not(:first-child) {
+    text-align:right;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+  }
+
+  .val-pos { color:var(--positive); }
+  .val-neg { color:var(--negative); }
+
+  /* ── TASAS HERO ── */
+  .tasa-hero {
+    display:flex;
+    gap:48px;
+    margin-bottom:24px;
+    padding-bottom:22px;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+
+  .thi-lbl {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:4px;
+  }
+
+  .thi-val {
+    font-family:'Playfair Display',serif;
+    font-size:48px;
+    color:var(--teal-dk);
+    line-height:1;
+  }
+
+  .thi-date {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--text-dim);
+    margin-top:4px;
+  }
+
+  /* ── YIELD BARS ── */
+  .yield-bars { display:flex; flex-direction:column; gap:10px; }
+
+  .yield-row {
+    display:grid;
+    grid-template-columns:110px 1fr 64px 96px;
+    align-items:center;
+    gap:14px;
+  }
+
+  .yield-fecha {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--text-dim);
+  }
+
+  .yield-plazo {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--text-muted);
+    text-align:right;
+  }
+
+  .yield-track {
+    height:7px;
+    background:var(--surface2);
+    border-radius:4px;
+    overflow:hidden;
+  }
+
+  .yield-fill {
+    height:100%;
+    border-radius:4px;
+    background:linear-gradient(90deg, var(--teal), var(--coral));
+    transition:width 0.9s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .yield-rate {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    font-weight:500;
+    color:var(--slate);
+    text-align:right;
+  }
+
+  /* ── MXN YEAR GRID ── */
+  .year-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(82px,1fr));
+    gap:8px;
+  }
+
+  .year-cell {
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:3px;
+    padding:12px 10px;
+    text-align:center;
+  }
+
+  .year-cell .yr {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--text-muted);
+    margin-bottom:5px;
+  }
+
+  .year-cell .ret { font-family:'Playfair Display',serif; font-size:18px; line-height:1; }
+  .year-cell .ret.pos { color:var(--positive); }
+  .year-cell .ret.neg { color:var(--negative); }
+
+  /* ── MACRO KPI BLOCK ── */
+  .macro-kpi-block { display:flex; flex-direction:column; gap:0; }
+
+  .macro-kpi-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+  }
+
+  .macro-kpi-row:last-of-type { border-bottom:none; }
+
+  .mkr-lbl {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:var(--text-muted);
+    text-transform:uppercase;
+  }
+
+  .mkr-val {
+    font-family:'Playfair Display',serif;
+    font-size:26px;
+    color:var(--text);
+    line-height:1;
+  }
+
+  .mkr-prev {
+    font-size:18px;
+    color:var(--text-mid);
+  }
+
+
+  .range-table { display:flex; gap:12px; margin-top:18px; }
+
+  .range-item {
+    flex:1;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:3px;
+    padding:14px 16px;
+  }
+
+  .ri-period {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:10px;
+  }
+
+  .ri-values { display:flex; gap:20px; }
+
+  .ri-lbl {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    color:var(--text-dim);
+    margin-bottom:2px;
+  }
+
+  .ri-num {
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    font-weight:500;
+    color:var(--text);
+  }
+
+  /* ── DIVIDER ── */
+  .divider { height:1px; background:var(--border); margin:44px 0; }
+
+  /* ── ERROR ── */
+  .error-banner {
+    background:rgba(200,90,74,0.1);
+    border:1px solid rgba(200,90,74,0.3);
+    border-radius:3px;
+    padding:10px 16px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--negative);
+    margin-bottom:20px;
+    display:none;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align:center;
+    padding:20px 0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.1em;
+    color:var(--text-dim);
+    border-top:1px solid var(--border);
+    margin-top:60px;
+  }
 </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="loading-logo">DFR</div>
-  <div class="loading-bar"><div class="loading-fill"></div></div>
-  <div style="font-size:12px;color:var(--text-muted);letter-spacing:2px">CARGANDO DATOS</div>
-</div>
-
 <header>
   <div class="brand">
-    <span class="brand-name">FB Market Tracker</span>
-    <span class="brand-sub">Florida Real Estate</span>
+    <span class="brand-name">Finanz <em>Butik</em></span>
+    <span class="brand-tag">Market Tracker</span>
   </div>
-  <div class="header-meta">
-    <div class="data-badge">FUENTE: <span>FRED — Federal Reserve Bank of St. Louis</span></div>
-    <div class="data-badge">ÚLTIMA ACTUALIZACIÓN: <span id="last-date">—</span></div>
+  <div class="update-pill">
+    <div class="status-dot"></div>
+    <span id="update-time">Cargando datos…</span>
   </div>
 </header>
 
-<div class="nav-tabs">
-  <button class="nav-tab active" onclick="showPage('precios')">Precios</button>
-  <button class="nav-tab" onclick="showPage('inventario')">Inventario</button>
-  <button class="nav-tab" onclick="showPage('velocidad')">Velocidad</button>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('mx')">
+    <span class="tab-num">01 /</span> Mercados México
+  </button>
+  <button class="tab-btn" onclick="switchTab('macro')">
+    <span class="tab-num">02 /</span> US Macro
+  </button>
+  <button class="tab-btn" onclick="switchTab('us')">
+    <span class="tab-num">03 /</span> Real Estate EE.UU.
+  </button>
 </div>
 
-<main>
+<!-- ════════════════════════════════════════════
+     PANEL 1 — MERCADOS MÉXICO
+════════════════════════════════════════════ -->
+<div id="panel-mx" class="tab-panel active">
+<div class="wrapper">
+  <div id="err-mx" class="error-banner"></div>
 
-  <!-- KPIs -->
-  <div class="kpi-strip" id="kpi-strip">
-    <div class="kpi-card">
-      <div class="kpi-label">Case-Shiller Miami</div>
-      <div class="kpi-value" id="kpi-miami">—</div>
-      <div class="kpi-sub">Índice (Ene 2000 = 100)</div>
-      <div class="kpi-delta" id="kpi-miami-d"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Case-Shiller Nacional</div>
-      <div class="kpi-value" id="kpi-us">—</div>
-      <div class="kpi-sub">Índice (Ene 2000 = 100)</div>
-      <div class="kpi-delta" id="kpi-us-d"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Listados Activos FL</div>
-      <div class="kpi-value" id="kpi-list">—</div>
-      <div class="kpi-sub">Propiedades en mercado</div>
-      <div class="kpi-delta" id="kpi-list-d"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Días en Mercado FL</div>
-      <div class="kpi-value" id="kpi-days">—</div>
-      <div class="kpi-sub">Mediana días hasta venta</div>
-      <div class="kpi-delta" id="kpi-days-d"></div>
-    </div>
+  <div class="panel-hero">
+    <h2>Mercados <em>Financieros</em> de México</h2>
+    <p>Tipo de cambio · Tasas Banxico · Curva de rendimientos</p>
   </div>
 
-  <!-- RANGO -->
-  <div class="range-bar">
-    <span class="range-label">Período</span>
-    <button class="range-btn" onclick="setRange(1)">1A</button>
-    <button class="range-btn" onclick="setRange(2)">2A</button>
-    <button class="range-btn active" onclick="setRange(5)">5A</button>
-    <button class="range-btn" onclick="setRange(0)">Máx</button>
-  </div>
+  <!-- MXN KPIs -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">01</span>
+      <span class="sl-text">Peso Mexicano / Dólar</span>
+      <div class="sl-line"></div>
+    </div>
 
-  <!-- PAGE: PRECIOS -->
-  <div id="page-precios" class="page active">
-    <div class="section-title">Índices de precios de vivienda</div>
-    <div class="chart-grid full" style="margin-bottom:20px">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Miami vs. EE.UU. Nacional</div>
-            <div class="chart-subtitle">S&P Case-Shiller · Índice Ene 2000 = 100 · No ajustado estacionalmente</div>
-          </div>
-          <span class="chart-tag">Mensual</span>
-        </div>
-        <canvas id="chart-precios-main" height="100"></canvas>
+    <div class="grid-4" style="margin-bottom:18px">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">USDMXN Spot</div>
+        <div class="kpi-value" id="mxn-spot">—</div>
+        <div class="kpi-sub">Último dato disponible</div>
+        <div id="mxn-spot-badge"></div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">MA 50 días</div>
+        <div class="kpi-value" id="mxn-ma50">—</div>
+        <div class="kpi-sub">Promedio móvil</div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">MA 100 días</div>
+        <div class="kpi-value" id="mxn-ma100">—</div>
+        <div class="kpi-sub">Promedio móvil</div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">MA 200 días</div>
+        <div class="kpi-value" id="mxn-ma200">—</div>
+        <div class="kpi-sub">Promedio móvil</div>
       </div>
     </div>
-    <div class="chart-grid two-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Miami vs Nacional — Base 100 (Ene 2017)</div>
-            <div class="chart-subtitle">Ambas series reindexadas · Muestra quién ha crecido más</div>
-          </div>
-          <span class="chart-tag">Reindexado</span>
+
+    <!-- MXN Chart -->
+    <div style="margin-bottom:18px">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">USDMXN · Serie de tiempo</div>
+        <div class="card-subtitle">Spot + medias móviles 50 / 100 / 200 días</div>
+        <div class="chart-controls" id="mxn-ctrl">
+          <button class="ctrl-btn" data-r="90"  onclick="setMxnRange(90)">3M</button>
+          <button class="ctrl-btn active" data-r="252" onclick="setMxnRange(252)">1A</button>
+          <button class="ctrl-btn" data-r="504" onclick="setMxnRange(504)">2A</button>
+          <button class="ctrl-btn" data-r="0"   onclick="setMxnRange(0)">Todo</button>
         </div>
-        <canvas id="chart-ratio" height="140"></canvas>
+        <div class="chart-wrap" style="height:260px"><canvas id="mxn-chart"></canvas></div>
       </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Z-Score Miami</div>
-            <div class="chart-subtitle">Desviaciones estándar vs promedio histórico · &gt;2 = caro, &lt;-2 = barato</div>
-          </div>
-          <span class="chart-tag">Z-Score</span>
-        </div>
-        <canvas id="chart-yoy" height="140"></canvas>
+    </div>
+
+    <!-- MXN sub-tables -->
+    <div class="grid-2">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Rendimiento anual del peso</div>
+        <div class="card-subtitle">Frente al dólar · por año calendario</div>
+        <div class="year-grid" id="mxn-years"></div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Rangos de precio</div>
+        <div class="card-subtitle">Máximos y mínimos por período</div>
+        <div class="range-table" id="mxn-ranges"></div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE: INVENTARIO -->
-  <div id="page-inventario" class="page">
-    <div class="section-title">Inventario de propiedades activas</div>
-    <div class="chart-grid full" style="margin-bottom:20px">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Listados Activos — Florida vs. Miami-Dade</div>
-            <div class="chart-subtitle">Conteo de propiedades activas en listing · Fuente: FRED</div>
-          </div>
-          <span class="chart-tag">Mensual</span>
-        </div>
-        <canvas id="chart-inv-main" height="100"></canvas>
+  <div class="divider"></div>
+
+  <!-- TASAS -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">02</span>
+      <span class="sl-text">Tasas de interés · Banxico</span>
+      <div class="sl-line"></div>
+    </div>
+    <div class="card"><div class="card-accent"></div>
+      <div class="tasa-hero" id="tasa-hero"></div>
+      <div class="card-title" style="margin-bottom:16px">Curva de Tasas · Cetes y Mbonos</div>
+      <div class="yield-bars" id="yield-bars"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PANEL 2 — US MACRO
+════════════════════════════════════════════ -->
+<div id="panel-macro" class="tab-panel">
+<div class="wrapper">
+  <div id="err-macro" class="error-banner"></div>
+
+  <div class="panel-hero">
+    <h2>Macroeconomía <em>Estados Unidos</em></h2>
+    <p>Tasas de interés · Inflación PCE &amp; CPI · Empleo</p>
+  </div>
+
+  <!-- TASAS US -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">01</span>
+      <span class="sl-text">Tasas de Interés · U.S. Treasury &amp; Mortgage</span>
+      <div class="sl-line"></div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="grid-4" style="margin-bottom:18px" id="rates-kpis">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Tasa 2Y</div>
+        <div class="kpi-value" id="us-r2y">—</div>
+        <div class="kpi-sub">U.S. Treasury 2 años</div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Tasa 10Y</div>
+        <div class="kpi-value" id="us-r10y">—</div>
+        <div class="kpi-sub">U.S. Treasury 10 años</div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Mortgage 30Y</div>
+        <div class="kpi-value" id="us-rmtg">—</div>
+        <div class="kpi-sub">Tasa hipotecaria 30 años</div>
+      </div>
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Spread 2Y–10Y</div>
+        <div class="kpi-value" id="us-spread">—</div>
+        <div class="kpi-sub">Diferencial de curva</div>
+        <div id="us-spread-badge"></div>
       </div>
     </div>
-    <div class="chart-grid two-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Florida — Tendencia</div>
-            <div class="chart-subtitle">Listados activos totales</div>
-          </div>
+
+    <!-- Rates chart -->
+    <div style="margin-bottom:18px">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Tasas · Serie de tiempo</div>
+        <div class="card-subtitle">Treasury 2Y · Treasury 10Y · Mortgage 30Y</div>
+        <div class="chart-controls" id="rates-ctrl">
+          <button class="ctrl-btn" data-r="90"  onclick="setRatesRange(90)">3M</button>
+          <button class="ctrl-btn active" data-r="252" onclick="setRatesRange(252)">1A</button>
+          <button class="ctrl-btn" data-r="504" onclick="setRatesRange(504)">2A</button>
+          <button class="ctrl-btn" data-r="0"   onclick="setRatesRange(0)">Todo</button>
         </div>
-        <canvas id="chart-inv-fl" height="140"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Miami-Dade — Tendencia</div>
-            <div class="chart-subtitle">Listados activos condado</div>
-          </div>
-        </div>
-        <canvas id="chart-inv-mia" height="140"></canvas>
+        <div class="chart-wrap" style="height:280px"><canvas id="rates-chart"></canvas></div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE: VELOCIDAD -->
-  <div id="page-velocidad" class="page">
-    <div class="section-title">Velocidad del mercado — días en mercado</div>
-    <div class="chart-grid full" style="margin-bottom:20px">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Días en Mercado — Florida vs. Miami-Dade</div>
-            <div class="chart-subtitle">Mediana de días desde listing hasta contrato · Fuente: FRED</div>
-          </div>
-          <span class="chart-tag">Mensual</span>
-        </div>
-        <canvas id="chart-days-main" height="100"></canvas>
-      </div>
+  <div class="divider"></div>
+
+  <!-- INFLACIÓN -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">02</span>
+      <span class="sl-text">Inflación · PCE &amp; CPI</span>
+      <div class="sl-line"></div>
     </div>
-    <div class="chart-grid two-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Florida</div>
-            <div class="chart-subtitle">Días mediana en mercado</div>
+
+    <div class="grid-2">
+      <!-- PCE -->
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">PCE Inflation</div>
+        <div class="card-subtitle">Personal Consumption Expenditures · Fed target</div>
+        <div class="macro-kpi-block">
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Último dato</div>
+            <div class="mkr-val" id="pce-last">—</div>
           </div>
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Dato previo</div>
+            <div class="mkr-val mkr-prev" id="pce-prev">—</div>
+          </div>
+          <div id="pce-badge" style="margin-top:14px"></div>
         </div>
-        <canvas id="chart-days-fl" height="140"></canvas>
       </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Miami-Dade</div>
-            <div class="chart-subtitle">Días mediana en mercado</div>
+      <!-- CPI -->
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">CPI Inflation</div>
+        <div class="card-subtitle">Consumer Price Index · Bureau of Labor Statistics</div>
+        <div class="macro-kpi-block">
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Último dato</div>
+            <div class="mkr-val" id="cpi-last">—</div>
           </div>
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Dato previo</div>
+            <div class="mkr-val mkr-prev" id="cpi-prev">—</div>
+          </div>
+          <div id="cpi-badge" style="margin-top:14px"></div>
         </div>
-        <canvas id="chart-days-mia" height="140"></canvas>
       </div>
     </div>
   </div>
 
-</main>
+  <div class="divider"></div>
+
+  <!-- EMPLEO -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">03</span>
+      <span class="sl-text">Mercado Laboral · Employment Data</span>
+      <div class="sl-line"></div>
+    </div>
+
+    <div class="grid-4">
+      <!-- Initial Jobless Claims -->
+      <div class="card col-2"><div class="card-accent"></div>
+        <div class="card-title">Initial Jobless Claims</div>
+        <div class="card-subtitle">Solicitudes iniciales de desempleo · semanales</div>
+        <div class="macro-kpi-block">
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Último dato</div>
+            <div class="mkr-val" id="ijc-last">—</div>
+          </div>
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Dato previo</div>
+            <div class="mkr-val mkr-prev" id="ijc-prev">—</div>
+          </div>
+          <div class="macro-kpi-row" style="margin-top:12px">
+            <div class="mkr-lbl">Promedio 3M</div>
+            <div class="mkr-val mkr-prev" id="ijc-3m">—</div>
+          </div>
+        </div>
+      </div>
+      <!-- Non-Farm Payrolls -->
+      <div class="card col-2"><div class="card-accent"></div>
+        <div class="card-title">Non-Farm Payrolls</div>
+        <div class="card-subtitle">Nómina no agrícola · variación mensual</div>
+        <div class="macro-kpi-block">
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Último dato</div>
+            <div class="mkr-val" id="nfp-last">—</div>
+          </div>
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Dato previo</div>
+            <div class="mkr-val mkr-prev" id="nfp-prev">—</div>
+          </div>
+        </div>
+      </div>
+      <!-- Desempleo -->
+      <div class="card col-2"><div class="card-accent"></div>
+        <div class="card-title">Tasa de Desempleo</div>
+        <div class="card-subtitle">Unemployment Rate · Bureau of Labor Statistics</div>
+        <div class="macro-kpi-block">
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Último dato</div>
+            <div class="mkr-val" id="ue-last">—</div>
+          </div>
+          <div class="macro-kpi-row">
+            <div class="mkr-lbl">Dato previo</div>
+            <div class="mkr-val mkr-prev" id="ue-prev">—</div>
+          </div>
+          <div class="macro-kpi-row" style="margin-top:12px">
+            <div class="mkr-lbl">Promedio 12M</div>
+            <div class="mkr-val mkr-prev" id="ue-12m">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PANEL 3 — REAL ESTATE EE.UU.
+════════════════════════════════════════════ -->
+<div id="panel-us" class="tab-panel">
+<div class="wrapper">
+  <div id="err-us" class="error-banner"></div>
+
+  <div class="panel-hero">
+    <h2>Real Estate <em>Estados Unidos</em></h2>
+    <p>Case-Shiller · Inventario activo · Días en mercado</p>
+  </div>
+
+  <!-- CASE-SHILLER -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">01</span>
+      <span class="sl-text">S&amp;P Corelogic Case-Shiller · Índice de precios</span>
+      <div class="sl-line"></div>
+    </div>
+
+    <div style="margin-bottom:18px">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Índice de Precios · Base 100 = Enero 2010</div>
+        <div class="card-subtitle">U.S. Nacional vs. Florida</div>
+        <div class="chart-controls">
+          <button class="ctrl-btn" onclick="setPiRange(60)">5A</button>
+          <button class="ctrl-btn active" onclick="setPiRange(0)">Todo</button>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="pi-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-accent"></div>
+      <div class="card-title">Variaciones por mercado</div>
+      <div class="card-subtitle">Último dato disponible · YoY y MoM</div>
+      <table class="data-table" id="pi-table"></table>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- DÍAS EN MERCADO -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">02</span>
+      <span class="sl-text">Días en mercado · Median Days on Market</span>
+      <div class="sl-line"></div>
+    </div>
+
+    <div style="margin-bottom:18px">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Median Days on Market</div>
+        <div class="card-subtitle">U.S. Nacional · Texas · California · Florida</div>
+        <div class="chart-controls">
+          <button class="ctrl-btn" onclick="setDmRange(24)">2A</button>
+          <button class="ctrl-btn active" onclick="setDmRange(0)">Todo</button>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="dm-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-accent"></div>
+      <div class="card-title">Días en mercado por región</div>
+      <div class="card-subtitle">Último dato · Cambio YoY y MoM</div>
+      <table class="data-table" id="dm-table"></table>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ACTIVE LISTINGS -->
+  <div class="section">
+    <div class="section-label">
+      <span class="sl-num">03</span>
+      <span class="sl-text">Inventario activo · Active Listings</span>
+      <div class="sl-line"></div>
+    </div>
+
+    <div style="margin-bottom:18px">
+      <div class="card"><div class="card-accent"></div>
+        <div class="card-title">Active Listing Count · EE.UU. Nacional</div>
+        <div class="card-subtitle">Inventario total de propiedades en mercado</div>
+        <div class="chart-controls">
+          <button class="ctrl-btn" onclick="setLRange(24)">2A</button>
+          <button class="ctrl-btn active" onclick="setLRange(0)">Todo</button>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="l-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-accent"></div>
+      <div class="card-title">Active Listings por región</div>
+      <div class="card-subtitle">Último dato · Cambio YoY y MoM</div>
+      <table class="data-table" id="l-table"></table>
+    </div>
+  </div>
+</div>
+</div>
 
 <footer>
-  <span>FB Market Tracker © 2026 · Datos: FRED — Federal Reserve Bank of St. Louis</span>
-  <span id="footer-range">Mostrando: últimos 5 años</span>
+  Finanz Butik Market Tracker &nbsp;·&nbsp; Datos: FRED, Banxico, S&P CoreLogic &nbsp;·&nbsp; Actualización automática cada 5 min
 </footer>
 
 <script>
-// ── PALETA ──
-const C = {
-  teal:       '#5992A1',
-  tealMid:    '#5099A1',
-  tealLight:  '#7CB4A3',
-  coral:      '#EF8641',
-  coralDark:  '#EF5B41',
-  slate:      '#30384E',
-  slateMid:   '#3D6E83',
-  slateLight: '#708FA3',
-  sand:       '#DB6C41',
-  gray:       '#C7C5C5',
+// ══════════════════
+// TAB LOGIC
+// ══════════════════
+function switchTab(t) {
+  const tabs=['mx','macro','us'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
+  document.getElementById('panel-mx').classList.toggle('active',t==='mx');
+  document.getElementById('panel-macro').classList.toggle('active',t==='macro');
+  document.getElementById('panel-us').classList.toggle('active',t==='us');
+  setTimeout(()=>Object.values(state.charts).forEach(c=>c&&c.resize()),60);
+}
+
+// ══════════════════
+// UTILS
+// ══════════════════
+const $ = id => document.getElementById(id);
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l=>l.trim());
+  if(!lines.length) return [];
+  const heads = splitLine(lines[0]);
+  return lines.slice(1).map(ln=>{
+    const v = splitLine(ln), r={};
+    heads.forEach((h,i)=>r[h.trim()]=v[i]!==undefined?v[i].trim():'');
+    return r;
+  });
+}
+
+function splitLine(l) {
+  const r=[]; let c='',q=false;
+  for(const ch of l){
+    if(ch==='"')q=!q;
+    else if(ch===','&&!q){r.push(c);c='';}
+    else c+=ch;
+  }
+  r.push(c); return r;
+}
+
+function fmt(n,d=2){ return(n==null||isNaN(n))?'—':Number(n).toLocaleString('es-MX',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function cVal(v){ return v>0?'val-pos':v<0?'val-neg':''; }
+function cCls(v){ return v>0?'pos':v<0?'neg':'neu'; }
+
+// ── Chart.js global defaults (light) ──
+Chart.defaults.color='#7a8494';
+Chart.defaults.borderColor='#d0c9be';
+Chart.defaults.font.family="'IBM Plex Mono', monospace";
+Chart.defaults.font.size=11;
+
+const CB = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{position:'top',align:'end',labels:{boxWidth:20,boxHeight:2,padding:14,usePointStyle:true,pointStyleWidth:16}},
+    tooltip:{
+      backgroundColor:'#f7f5f1',borderColor:'#d0c9be',borderWidth:1,padding:12,
+      titleColor:'#7a8494',bodyColor:'#2a2e35',
+      titleFont:{family:"'IBM Plex Mono',monospace",size:10},
+      bodyFont:{family:"'IBM Plex Mono',monospace",size:12},
+    }
+  },
+  scales:{
+    x:{grid:{color:'rgba(208,201,190,0.45)',drawTicks:false},ticks:{maxTicksLimit:8,maxRotation:0}},
+    y:{grid:{color:'rgba(208,201,190,0.45)',drawTicks:false},ticks:{maxTicksLimit:6}},
+  }
 };
 
-// ── GLOBALS ──
-let allData = [];
-let charts = {};
-let currentRange = 5;
-let currentPage = 'precios';
+const C={teal:'#3d8a8c',tealLt:'#6bbfc1',slate:'#3d4f5c',coral:'#c85a4a',amber:'#b8894a',sage:'#5a7a6a'};
 
-// ── CSV ──
-const CSV_URL = 'https://raw.githubusercontent.com/davidrouxf/dfr-market-tracker/main/FB_Dashboard.csv';
+let state={mxn:[],dm:[],l:[],pi:[],tasas:[],rates:[],macro:[],charts:{}};
 
-function parseDate(str) {
-  const [m, d, y] = str.split('/');
-  return new Date(+y, +m - 1, +d);
+// ══════════════════
+// FETCH
+// ══════════════════
+async function fetchCSV(f){
+  const r=await fetch(f+'?t='+Date.now());
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return parseCSV(await r.text());
 }
 
-function fmtDate(d) {
-  return d.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' });
-}
+// ══════════════════
+// MXN
+// ══════════════════
+let mxnAll={labels:[],spot:[],ma50:[],ma100:[],ma200:[]};
 
-function filterByRange(data, years) {
-  if (!years) return data;
-  const cutoff = new Date();
-  cutoff.setFullYear(cutoff.getFullYear() - years);
-  return data.filter(r => r.date >= cutoff);
-}
-
-// ── CHART DEFAULTS ──
-Chart.defaults.font.family = "'DM Sans', sans-serif";
-Chart.defaults.font.size = 11;
-Chart.defaults.color = '#6B7280';
-
-function baseOpts(yLabel = '') {
-  return {
-    responsive: true,
-    interaction: { mode: 'index', intersect: false },
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { boxWidth: 10, boxHeight: 10, padding: 16, usePointStyle: true, pointStyle: 'circle' }
-      },
-      tooltip: {
-        backgroundColor: '#30384E',
-        titleColor: '#C7C5C5',
-        bodyColor: '#fff',
-        padding: 10,
-        cornerRadius: 2,
-        titleFont: { size: 10, weight: '500' },
-        bodyFont: { size: 12 },
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: '#EEE9E0' },
-        ticks: { maxTicksLimit: 8, maxRotation: 0 },
-        border: { color: '#DDD9D0' }
-      },
-      y: {
-        grid: { color: '#EEE9E0' },
-        ticks: { maxTicksLimit: 6 },
-        border: { color: '#DDD9D0' },
-        title: yLabel ? { display: true, text: yLabel, font: { size: 10 }, color: '#9CA3AF' } : { display: false }
-      }
-    }
+function renderMXN(data){
+  const rows=data.filter(r=>r['USDMX']&&!isNaN(parseFloat(r['USDMX'])));
+  mxnAll={
+    labels:rows.map(r=>r['Fecha']||r['fecha']),
+    spot:  rows.map(r=>parseFloat(r['USDMX'])),
+    ma50:  rows.map(r=>parseFloat(r['50d MA'])||null),
+    ma100: rows.map(r=>parseFloat(r['100d MA'])||null),
+    ma200: rows.map(r=>parseFloat(r['200d MA'])||null),
   };
+  const last=rows[rows.length-1], prev=rows.length>1?rows[rows.length-2]:last;
+  const spot=parseFloat(last['USDMX']);
+  const chg=(spot-parseFloat(prev['USDMX']))/parseFloat(prev['USDMX']);
+  $('mxn-spot').textContent =fmt(spot,4);
+  $('mxn-ma50').textContent =fmt(parseFloat(last['50d MA']),4);
+  $('mxn-ma100').textContent=fmt(parseFloat(last['100d MA']),4);
+  $('mxn-ma200').textContent=fmt(parseFloat(last['200d MA']),4);
+  $('mxn-spot-badge').innerHTML=`<div class="badge ${cCls(-chg)}">${chg>=0?'▲':'▼'} ${Math.abs(chg*100).toFixed(3)}% diario</div>`;
+
+  const yr=data.filter(r=>r['Año']&&!isNaN(parseFloat(r['Año']))&&r['Rendimiento del peso']&&r['Rendimiento del peso'].trim());
+  $('mxn-years').innerHTML=yr.map(r=>{
+    const v=parseFloat(r['Rendimiento del peso']);
+    return `<div class="year-cell"><div class="yr">${parseInt(r['Año'])}</div><div class="ret ${v>=0?'pos':'neg'}">${v>=0?'+':''}${(v*100).toFixed(1)}%</div></div>`;
+  }).join('');
+
+  const rng=data.filter(r=>r['Periodo']&&r['Periodo'].trim()&&r['Máximo']&&!isNaN(parseFloat(r['Máximo'])));
+  $('mxn-ranges').innerHTML=rng.map(r=>`
+    <div class="range-item">
+      <div class="ri-period">${r['Periodo']}</div>
+      <div class="ri-values">
+        <div><div class="ri-lbl">Máximo</div><div class="ri-num">${fmt(parseFloat(r['Máximo']),4)}</div></div>
+        <div><div class="ri-lbl">Mínimo</div><div class="ri-num">${fmt(parseFloat(r['Mínimo']),4)}</div></div>
+      </div>
+    </div>`).join('');
+
+  setMxnRange(252);
 }
 
-function makeDataset(label, data, color, opts = {}) {
-  return {
-    label,
-    data,
-    borderColor: color,
-    backgroundColor: color + '18',
-    borderWidth: 2,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    fill: opts.fill ?? false,
-    tension: 0.3,
-    ...opts,
+let mxnChart=null;
+function setMxnRange(n){
+  document.querySelectorAll('#mxn-ctrl .ctrl-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.r)===n));
+  const sl=n===0?0:Math.max(0,mxnAll.labels.length-n);
+  const labels=mxnAll.labels.slice(sl);
+  const ds=[
+    {label:'USDMXN', data:mxnAll.spot.slice(sl),  borderColor:C.slate, borderWidth:1.5, pointRadius:0, tension:0.1,  fill:false},
+    {label:'MA 50d', data:mxnAll.ma50.slice(sl),  borderColor:C.teal,  borderWidth:1,   pointRadius:0, borderDash:[4,3], tension:0.3, fill:false},
+    {label:'MA 100d',data:mxnAll.ma100.slice(sl), borderColor:C.amber, borderWidth:1,   pointRadius:0, borderDash:[6,4], tension:0.3, fill:false},
+    {label:'MA 200d',data:mxnAll.ma200.slice(sl), borderColor:C.coral, borderWidth:1,   pointRadius:0, borderDash:[8,4], tension:0.3, fill:false},
+  ];
+  if(mxnChart){mxnChart.data.labels=labels;mxnChart.data.datasets=ds;mxnChart.update();}
+  else{mxnChart=new Chart($('mxn-chart'),{type:'line',data:{labels,datasets:ds},options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>`  ${c.dataset.label}: ${fmt(c.parsed.y,4)}`}}}}});state.charts.mxn=mxnChart;}
+}
+
+// ══════════════════
+// TASAS
+// ══════════════════
+function renderTasas(data){
+  const r0=data[0];
+  $('tasa-hero').innerHTML=`
+    <div><div class="thi-lbl">Tasa Overnight</div><div class="thi-val">${fmt(parseFloat(r0['Tasa Overnight']),2)}%</div><div class="thi-date">${r0['Fecha']}</div></div>
+    <div><div class="thi-lbl">Tasa de Referencia</div><div class="thi-val">${fmt(parseFloat(r0['Tasa de referencia']),2)}%</div><div class="thi-date">${r0['Fecha']}</div></div>`;
+  const curva=data.slice(2).filter(r=>{const t=Object.values(r)[1];return Object.values(r)[0]&&Object.values(r)[0].trim()&&!isNaN(parseFloat(t));});
+  const maxT=Math.max(...curva.map(r=>parseFloat(Object.values(r)[1])));
+  $('yield-bars').innerHTML=curva.map(r=>{
+    const v=Object.values(r),tasa=parseFloat(v[1]),fecha=(v[2]||'').trim();
+    return `<div class="yield-row"><div class="yield-plazo">${v[0].trim()}</div><div class="yield-track"><div class="yield-fill" style="width:${(tasa/maxT*100).toFixed(1)}%"></div></div><div class="yield-rate">${fmt(tasa,2)}%</div><div class="yield-fecha">${fecha}</div></div>`;
+  }).join('');
+}
+
+// ══════════════════
+// PI (Case-Shiller)
+// ══════════════════
+let piAll={labels:[],us:[],fl:[]};
+let piChart=null;
+
+function renderPI(data){
+  const rows=data.filter(r=>r['Fecha']&&r['U.S.']&&!isNaN(parseFloat(r['U.S.'])));
+  piAll={labels:rows.map(r=>r['Fecha']),us:rows.map(r=>parseFloat(r['U.S.'])),fl:rows.map(r=>parseFloat(r['Florida'])||null)};
+  const tr=data.filter(r=>r['Región']&&r['Región'].trim()&&r['YoY']&&r['YoY'].trim());
+  $('pi-table').innerHTML='<thead><tr><th>Región</th><th>YoY</th><th>MoM</th></tr></thead><tbody>'+
+    tr.map(r=>{const y=parseFloat(r['YoY']),m=parseFloat(r['MoM']);return`<tr><td>${r['Región']}</td><td class="${cVal(y)}">${r['YoY']}</td><td class="${cVal(m)}">${r['MoM']}</td></tr>`;}).join('')+'</tbody>';
+  setPiRange(0);
+}
+
+function setPiRange(n){
+  const sl=n===0?0:Math.max(0,piAll.labels.length-n);
+  const labels=piAll.labels.slice(sl);
+  const ds=[
+    {label:'U.S. Nacional',data:piAll.us.slice(sl),borderColor:C.teal, borderWidth:2,pointRadius:0,fill:false,tension:0.2},
+    {label:'Florida',      data:piAll.fl.slice(sl),borderColor:C.coral,borderWidth:2,pointRadius:0,fill:false,tension:0.2},
+  ];
+  if(piChart){piChart.data.labels=labels;piChart.data.datasets=ds;piChart.update();}
+  else{piChart=new Chart($('pi-chart'),{type:'line',data:{labels,datasets:ds},options:{...CB}});state.charts.pi=piChart;}
+}
+
+// ══════════════════
+// DAYS ON MARKET
+// ══════════════════
+let dmAll={labels:[],us:[],tx:[],ca:[],fl:[]};
+let dmChart=null;
+
+function renderDM(data){
+  const rows=data.filter(r=>r['Fechas']&&!isNaN(parseFloat(r['U.S.'])));
+  dmAll={labels:rows.map(r=>r['Fechas']),us:rows.map(r=>parseFloat(r['U.S.'])),tx:rows.map(r=>parseFloat(r['Texas'])),ca:rows.map(r=>parseFloat(r['California'])),fl:rows.map(r=>parseFloat(r['Florida']))};
+  const tr=data.filter(r=>r['Región']&&r['Región'].trim()&&!isNaN(parseFloat(r['Último dato'])));
+  $('dm-table').innerHTML='<thead><tr><th>Región</th><th>Último dato (días)</th><th>Cambio YoY</th><th>Cambio MoM</th></tr></thead><tbody>'+
+    tr.map(r=>{const y=parseFloat(r['Cambio YoY']),m=parseFloat(r['Cambio MoM']);return`<tr><td>${r['Región']}</td><td>${fmt(parseFloat(r['Último dato']),0)}</td><td class="${cVal(y)}">${y>0?'+':''}${fmt(y,0)}</td><td class="${cVal(m)}">${m>0?'+':''}${fmt(m,0)}</td></tr>`;}).join('')+'</tbody>';
+  setDmRange(0);
+}
+
+function setDmRange(n){
+  const sl=n===0?0:Math.max(0,dmAll.labels.length-n);
+  const labels=dmAll.labels.slice(sl);
+  const ds=[
+    {label:'U.S.',       data:dmAll.us.slice(sl),borderColor:C.slate, borderWidth:2,  pointRadius:0,fill:false,tension:0.2},
+    {label:'Texas',      data:dmAll.tx.slice(sl),borderColor:C.teal,  borderWidth:1.5,pointRadius:0,fill:false,tension:0.2},
+    {label:'California', data:dmAll.ca.slice(sl),borderColor:C.amber, borderWidth:1.5,pointRadius:0,fill:false,tension:0.2},
+    {label:'Florida',    data:dmAll.fl.slice(sl),borderColor:C.coral, borderWidth:1.5,pointRadius:0,fill:false,tension:0.2},
+  ];
+  if(dmChart){dmChart.data.labels=labels;dmChart.data.datasets=ds;dmChart.update();}
+  else{dmChart=new Chart($('dm-chart'),{type:'line',data:{labels,datasets:ds},options:{...CB}});state.charts.dm=dmChart;}
+}
+
+// ══════════════════
+// ACTIVE LISTINGS
+// ══════════════════
+let lAll={labels:[],us:[]};
+let lChart=null;
+
+function renderL(data){
+  const rows=data.filter(r=>r['Fecha']&&r['U.S.']&&!isNaN(parseFloat(r['U.S.'])));
+  lAll={labels:rows.map(r=>r['Fecha']),us:rows.map(r=>parseFloat(r['U.S.']))};
+  const tr=data.filter(r=>r['Región']&&r['Región'].trim()&&!isNaN(parseFloat(r['Último dato'])));
+  $('l-table').innerHTML='<thead><tr><th>Región</th><th>Último dato</th><th>Cambio YoY</th><th>Cambio MoM</th></tr></thead><tbody>'+
+    tr.map(r=>{const y=parseFloat(r['Cambio YoY']),m=parseFloat(r['Cambio MoM']);return`<tr><td>${r['Región']}</td><td>${parseInt(r['Último dato']).toLocaleString('es-MX')}</td><td class="${cVal(y)}">${y>0?'+':''}${parseInt(y).toLocaleString('es-MX')}</td><td class="${cVal(m)}">${m>0?'+':''}${parseInt(m).toLocaleString('es-MX')}</td></tr>`;}).join('')+'</tbody>';
+  setLRange(0);
+}
+
+function setLRange(n){
+  const sl=n===0?0:Math.max(0,lAll.labels.length-n);
+  const labels=lAll.labels.slice(sl);
+  const ds=[{label:'Active Listings U.S.',data:lAll.us.slice(sl),borderColor:C.teal,backgroundColor:'rgba(61,138,140,0.07)',borderWidth:2,pointRadius:0,fill:true,tension:0.3}];
+  if(lChart){lChart.data.labels=labels;lChart.data.datasets=ds;lChart.update();}
+  else{lChart=new Chart($('l-chart'),{type:'line',data:{labels,datasets:ds},options:{...CB,scales:{...CB.scales,y:{...CB.scales.y,ticks:{callback:v=>(v/1000).toFixed(0)+'k'}}}}});state.charts.l=lChart;}
+}
+
+// ══════════════════
+// US RATES
+// ══════════════════
+let ratesAll={labels:[],r2y:[],r10y:[],mtg:[]};
+let ratesChart=null;
+
+function renderRates(data){
+  const rows=data.filter(r=>r['Fecha']&&r['Tasa 2Y']&&!isNaN(parseFloat(r['Tasa 2Y'])));
+  ratesAll={
+    labels:rows.map(r=>r['Fecha']),
+    r2y:  rows.map(r=>parseFloat(r['Tasa 2Y'])),
+    r10y: rows.map(r=>parseFloat(r['Tasa 10Y'])),
+    mtg:  rows.map(r=>parseFloat(r['Mortgage 30Y'])),
   };
+  const last=rows[rows.length-1];
+  const r2=parseFloat(last['Tasa 2Y']), r10=parseFloat(last['Tasa 10Y']), mtg=parseFloat(last['Mortgage 30Y']);
+  const spread=(r10-r2);
+  $('us-r2y').textContent =fmt(r2,2)+'%';
+  $('us-r10y').textContent=fmt(r10,2)+'%';
+  $('us-rmtg').textContent=fmt(mtg,2)+'%';
+  $('us-spread').textContent=(spread>=0?'+':'')+fmt(spread,2)+'%';
+  $('us-spread-badge').innerHTML=`<div class="badge ${spread>=0?'pos':'neg'}">${spread>=0?'Curva normal':'Curva invertida'}</div>`;
+  setRatesRange(252);
 }
 
-// ── BUILD CHARTS ──
-function buildAll(data) {
-  const labels = data.map(r => fmtDate(r.date));
-
-  destroyAll();
-
-  // ── PRECIOS MAIN ──
-  charts.preciosMain = new Chart(document.getElementById('chart-precios-main'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        makeDataset('Case-Shiller Miami', data.map(r => r.MIXRNSA),    C.teal,     { fill: true }),
-        makeDataset('Case-Shiller Nacional', data.map(r => r.CSUSHPINSA), C.coral, { fill: false }),
-      ]
-    },
-    options: baseOpts('Índice (Ene 2000=100)')
-  });
-
-  // ── REINDEXADO BASE 100 ──
-  const base0 = allData[0]; // siempre usar el primer dato de toda la historia como base
-  const baseMIA = allData.find(r => r.MIXRNSA)?.MIXRNSA;
-  const baseUS  = allData.find(r => r.CSUSHPINSA)?.CSUSHPINSA;
-  const idxMIA = data.map(r => r.MIXRNSA    && baseMIA ? +((r.MIXRNSA    / baseMIA) * 100).toFixed(2) : null);
-  const idxUS  = data.map(r => r.CSUSHPINSA && baseUS  ? +((r.CSUSHPINSA / baseUS)  * 100).toFixed(2) : null);
-
-  charts.ratio = new Chart(document.getElementById('chart-ratio'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        makeDataset('Miami (base 100)',   idxMIA, C.teal,  { fill: true }),
-        makeDataset('Nacional (base 100)', idxUS, C.coral, { fill: false }),
-      ]
-    },
-    options: baseOpts('Índice (Ene 2017 = 100)')
-  });
-
-  // ── Z-SCORE MIAMI (usando toda la historia disponible) ──
-  const miaVals = allData.map(r => r.MIXRNSA).filter(v => v);
-  const mean = miaVals.reduce((a,b) => a+b, 0) / miaVals.length;
-  const std  = Math.sqrt(miaVals.reduce((a,b) => a + (b-mean)**2, 0) / miaVals.length);
-  const zscore = data.map(r => r.MIXRNSA ? +((r.MIXRNSA - mean) / std).toFixed(2) : null);
-
-  charts.yoy = new Chart(document.getElementById('chart-yoy'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        makeDataset('Z-Score Miami', zscore, C.slateMid, { fill: false }),
-        {
-          label: '+2σ', data: data.map(() => 2),
-          borderColor: C.coralDark, borderWidth: 1, borderDash: [4,4],
-          pointRadius: 0, fill: false, tension: 0,
-        },
-        {
-          label: '-2σ', data: data.map(() => -2),
-          borderColor: C.tealLight, borderWidth: 1, borderDash: [4,4],
-          pointRadius: 0, fill: false, tension: 0,
-        },
-      ]
-    },
-    options: {
-      ...baseOpts('Desviaciones estándar'),
-      plugins: {
-        ...baseOpts().plugins,
-        annotation: {},
-        tooltip: { ...baseOpts().plugins.tooltip }
-      }
-    }
-  });
-
-  // ── INVENTARIO MAIN ──
-  charts.invMain = new Chart(document.getElementById('chart-inv-main'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        makeDataset('Florida', data.map(r => r.ACTLISCOUFL),    C.teal,  { fill: true }),
-        makeDataset('Miami-Dade', data.map(r => r.ACTLISCOU12086), C.coral, { fill: false }),
-      ]
-    },
-    options: {
-      ...baseOpts('Listados activos'),
-      scales: {
-        ...baseOpts().scales,
-        y:  { ...baseOpts().scales.y, type: 'linear', position: 'left' },
-        y1: { ...baseOpts().scales.y, type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
-      }
-    }
-  });
-
-  // ── INV FL ──
-  charts.invFL = new Chart(document.getElementById('chart-inv-fl'), {
-    type: 'line',
-    data: { labels, datasets: [ makeDataset('Florida', data.map(r => r.ACTLISCOUFL), C.teal, { fill: true }) ] },
-    options: baseOpts()
-  });
-
-  // ── INV MIA ──
-  charts.invMia = new Chart(document.getElementById('chart-inv-mia'), {
-    type: 'line',
-    data: { labels, datasets: [ makeDataset('Miami-Dade', data.map(r => r.ACTLISCOU12086), C.coral, { fill: true }) ] },
-    options: baseOpts()
-  });
-
-  // ── DAYS MAIN ──
-  charts.daysMain = new Chart(document.getElementById('chart-days-main'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        makeDataset('Florida',    data.map(r => r.MEDDAYONMARFL),    C.teal,     { fill: true }),
-        makeDataset('Miami-Dade', data.map(r => r.MEDDAYONMAR12086), C.slateLight, { fill: false }),
-      ]
-    },
-    options: baseOpts('Días')
-  });
-
-  // ── DAYS FL ──
-  charts.daysFL = new Chart(document.getElementById('chart-days-fl'), {
-    type: 'line',
-    data: { labels, datasets: [ makeDataset('Florida', data.map(r => r.MEDDAYONMARFL), C.teal, { fill: true }) ] },
-    options: baseOpts('Días')
-  });
-
-  // ── DAYS MIA ──
-  charts.daysMia = new Chart(document.getElementById('chart-days-mia'), {
-    type: 'line',
-    data: { labels, datasets: [ makeDataset('Miami-Dade', data.map(r => r.MEDDAYONMAR12086), C.slateLight, { fill: true }) ] },
-    options: baseOpts('Días')
-  });
+let ratesChartObj=null;
+function setRatesRange(n){
+  document.querySelectorAll('#rates-ctrl .ctrl-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.r)===n));
+  const sl=n===0?0:Math.max(0,ratesAll.labels.length-n);
+  const labels=ratesAll.labels.slice(sl);
+  const ds=[
+    {label:'Treasury 2Y',  data:ratesAll.r2y.slice(sl), borderColor:C.teal,  borderWidth:2,   pointRadius:0, tension:0.15, fill:false},
+    {label:'Treasury 10Y', data:ratesAll.r10y.slice(sl),borderColor:C.slate, borderWidth:2,   pointRadius:0, tension:0.15, fill:false},
+    {label:'Mortgage 30Y', data:ratesAll.mtg.slice(sl), borderColor:C.coral, borderWidth:1.5, pointRadius:0, borderDash:[5,3], tension:0.15, fill:false},
+  ];
+  const opts={...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>`  ${c.dataset.label}: ${fmt(c.parsed.y,2)}%`}}},scales:{...CB.scales,y:{...CB.scales.y,ticks:{...CB.scales.y?.ticks,callback:v=>v.toFixed(2)+'%'}}}};
+  if(ratesChartObj){ratesChartObj.data.labels=labels;ratesChartObj.data.datasets=ds;ratesChartObj.update();}
+  else{ratesChartObj=new Chart($('rates-chart'),{type:'line',data:{labels,datasets:ds},options:opts});state.charts.rates=ratesChartObj;}
 }
 
-function destroyAll() {
-  Object.values(charts).forEach(c => c && c.destroy());
-  charts = {};
-}
+// ══════════════════
+// US MACRO
+// ══════════════════
+function renderMacro(data){
+  // Data is wide-format: row0=header categories, row1=Último dato, row2=Dato previo, row3=extras
+  // Columns: PCE(0-1), CPI(3-4), IJC(6-7), NFP(9-10), UE(12-13)
+  const r1=data[0], r2=data[1], r3=data[2]||{};
 
-// ── KPIs ──
-function updateKPIs(data) {
-  const last  = [...data].reverse().find(r => r.MIXRNSA);
-  const prev  = [...data].reverse().find((r, i) => i > 0 && r.MIXRNSA);
-  const lastL = [...data].reverse().find(r => r.ACTLISCOUFL);
-  const prevL = [...data].reverse().find((r, i) => i > 0 && r.ACTLISCOUFL);
-  const lastD = [...data].reverse().find(r => r.MEDDAYONMARFL);
-
-  if (last) {
-    document.getElementById('last-date').textContent = fmtDate(last.date);
-    document.getElementById('kpi-miami').textContent = last.MIXRNSA ? last.MIXRNSA.toFixed(1) : '—';
-    document.getElementById('kpi-us').textContent    = last.CSUSHPINSA ? last.CSUSHPINSA.toFixed(1) : '—';
-    if (prev && last.MIXRNSA && prev.MIXRNSA) {
-      const d = ((last.MIXRNSA / prev.MIXRNSA - 1) * 100).toFixed(2);
-      const el = document.getElementById('kpi-miami-d');
-      el.textContent = (d >= 0 ? '▲ +' : '▼ ') + d + '% vs mes anterior';
-      el.className = 'kpi-delta ' + (d >= 0 ? 'up' : 'down');
-    }
-    if (prev && last.CSUSHPINSA && prev.CSUSHPINSA) {
-      const d = ((last.CSUSHPINSA / prev.CSUSHPINSA - 1) * 100).toFixed(2);
-      const el = document.getElementById('kpi-us-d');
-      el.textContent = (d >= 0 ? '▲ +' : '▼ ') + d + '% vs mes anterior';
-      el.className = 'kpi-delta ' + (d >= 0 ? 'up' : 'down');
-    }
+  // PCE
+  const pceLast=Object.values(r1)[1]||'—';
+  const pcePrev=Object.values(r2)[1]||'—';
+  $('pce-last').textContent=pceLast;
+  $('pce-prev').textContent=pcePrev;
+  const pceNum=parseFloat(pceLast), pcePrevNum=parseFloat(pcePrev);
+  if(!isNaN(pceNum)&&!isNaN(pcePrevNum)){
+    const d=pceNum-pcePrevNum;
+    $('pce-badge').innerHTML=`<div class="badge ${d<=0?'pos':'neg'}">${d>0?'▲':'▼'} ${Math.abs(d).toFixed(2)}pp vs previo · Meta Fed: 2.0%</div>`;
   }
 
-  if (lastL) {
-    document.getElementById('kpi-list').textContent = lastL.ACTLISCOUFL ? lastL.ACTLISCOUFL.toLocaleString('es-MX') : '—';
-    if (prevL && lastL.ACTLISCOUFL && prevL.ACTLISCOUFL) {
-      const d = ((lastL.ACTLISCOUFL / prevL.ACTLISCOUFL - 1) * 100).toFixed(1);
-      const el = document.getElementById('kpi-list-d');
-      el.textContent = (d >= 0 ? '▲ +' : '▼ ') + d + '% vs mes anterior';
-      el.className = 'kpi-delta ' + (d >= 0 ? 'up' : 'down');
-    }
+  // CPI
+  const cpiLast=Object.values(r1)[4]||'—';
+  const cpiPrev=Object.values(r2)[4]||'—';
+  $('cpi-last').textContent=cpiLast;
+  $('cpi-prev').textContent=cpiPrev;
+  const cpiNum=parseFloat(cpiLast), cpiPrevNum=parseFloat(cpiPrev);
+  if(!isNaN(cpiNum)&&!isNaN(cpiPrevNum)){
+    const d=cpiNum-cpiPrevNum;
+    $('cpi-badge').innerHTML=`<div class="badge ${d<=0?'pos':'neg'}">${d>0?'▲':'▼'} ${Math.abs(d).toFixed(2)}pp vs previo</div>`;
   }
 
-  if (lastD) {
-    document.getElementById('kpi-days').textContent = lastD.MEDDAYONMARFL ?? '—';
+  // Initial Jobless Claims
+  $('ijc-last').textContent=Object.values(r1)[7]||'—';
+  $('ijc-prev').textContent=Object.values(r2)[7]||'—';
+  const ijc3m=Object.values(r3)[7];
+  if(ijc3m) $('ijc-3m').textContent=parseInt(ijc3m.replace(/,/g,'')).toLocaleString('es-MX');
+
+  // NFP
+  $('nfp-last').textContent=Object.values(r1)[10]||'—';
+  $('nfp-prev').textContent=Object.values(r2)[10]||'—';
+
+  // Unemployment
+  $('ue-last').textContent=Object.values(r1)[13]||'—';
+  $('ue-prev').textContent=Object.values(r2)[13]||'—';
+  const ue12m=Object.values(r3)[13];
+  if(ue12m) $('ue-12m').textContent=ue12m;
+}
+
+
+async function loadAll(){
+  const files=[
+    {name:'Input_MXN.csv',      key:'mxn',   render:renderMXN,   err:'err-mx'},
+    {name:'Input_Tasas.csv',    key:'tasas', render:renderTasas, err:'err-mx'},
+    {name:'Input_US_Rates.csv', key:'rates', render:renderRates, err:'err-macro'},
+    {name:'Input_US_Macro.csv', key:'macro', render:renderMacro, err:'err-macro'},
+    {name:'Input_PI.csv',       key:'pi',    render:renderPI,    err:'err-us'},
+    {name:'Input_DM.csv',       key:'dm',    render:renderDM,    err:'err-us'},
+    {name:'Input_L.csv',        key:'l',     render:renderL,     err:'err-us'},
+  ];
+  const errs={'err-mx':[],'err-macro':[],'err-us':[]};
+  for(const f of files){
+    try{ const d=await fetchCSV(f.name); state[f.key]=d; f.render(d); }
+    catch(e){ errs[f.err].push(`${f.name}: ${e.message}`); }
   }
-}
-
-// ── RANGE ──
-function setRange(years) {
-  currentRange = years;
-  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  const labels = { 0: 'histórico completo', 1: 'último año', 2: 'últimos 2 años', 5: 'últimos 5 años' };
-  document.getElementById('footer-range').textContent = 'Mostrando: ' + (labels[years] || years + ' años');
-  const filtered = filterByRange(allData, years);
-  buildAll(filtered);
-}
-
-// ── PAGE NAV ──
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  event.target.classList.add('active');
-  currentPage = name;
-}
-
-// ── LOAD CSV ──
-Papa.parse(CSV_URL, {
-  download: true,
-  header: true,
-  skipEmptyLines: true,
-  complete: function(results) {
-    allData = results.data
-      .map(r => ({
-        date:             parseDate(r.DATE),
-        MIXRNSA:          parseFloat(r.MIXRNSA) || null,
-        CSUSHPINSA:       parseFloat(r.CSUSHPINSA) || null,
-        ACTLISCOUFL:      parseFloat(r.ACTLISCOUFL) || null,
-        ACTLISCOU12086:   parseFloat(r.ACTLISCOU12086) || null,
-        MEDDAYONMARFL:    parseFloat(r.MEDDAYONMARFL) || null,
-        MEDDAYONMAR12086: parseFloat(r.MEDDAYONMAR12086) || null,
-      }))
-      .filter(r => r.date instanceof Date && !isNaN(r.date))
-      .sort((a, b) => a.date - b.date);
-
-    const filtered = filterByRange(allData, currentRange);
-    updateKPIs(allData);
-    buildAll(filtered);
-    document.getElementById('loading').style.display = 'none';
-  },
-  error: function() {
-    document.getElementById('loading').innerHTML = '<div style="color:#EF5B41;font-family:serif;font-size:18px">Error cargando datos.</div>';
+  for(const[id,msgs] of Object.entries(errs)){
+    const el=$(id);
+    if(el){ if(msgs.length){el.textContent='⚠ '+msgs.join(' · ');el.style.display='block';}
+    else el.style.display='none'; }
   }
-});
+  $('update-time').textContent=new Date().toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+loadAll();
+setInterval(loadAll,5*60*1000);
 </script>
 </body>
 </html>
